@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kai-AI — Agent Dashboard</title>
+  <script src="https://cdn.twind.style" crossorigin></script>
+  <script src="https://esm.town/v/std/catch"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .gradient-bg { background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #0f1f3d 100%); }
+    .card-glow { box-shadow: 0 0 30px rgba(99, 102, 241, 0.15); }
+    .pulse-dot { animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .scroll-area { max-height: 320px; overflow-y: auto; }
+    .scroll-area::-webkit-scrollbar { width: 4px; }
+    .scroll-area::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); }
+    .scroll-area::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.5); border-radius: 2px; }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen text-white">
+
+  <!-- Header -->
+  <header class="border-b border-white border-opacity-10 px-6 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-2xl">🤖</div>
+        <div>
+          <h1 class="text-xl font-bold text-white">Kai-AI</h1>
+          <p class="text-xs text-indigo-300">Autonomous Agent · Base Mainnet · x402 Enabled</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 bg-green-900 bg-opacity-40 border border-green-500 border-opacity-30 rounded-full px-3 py-1">
+          <span class="w-2 h-2 rounded-full bg-green-400 pulse-dot"></span>
+          <span class="text-xs text-green-300 font-medium">Live on Base Mainnet</span>
+        </div>
+        <a href="/source" target="_blank" class="text-xs text-indigo-400 hover:text-indigo-200 transition-colors">view source ↗</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-8">
+
+    <!-- Stats Row -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="stats-grid">
+      <div class="bg-white bg-opacity-5 rounded-2xl p-5 border border-white border-opacity-10 card-glow">
+        <p class="text-xs text-gray-400 mb-1">Total Revenue</p>
+        <p class="text-2xl font-bold text-green-400 mono" id="stat-revenue">$0.00</p>
+        <p class="text-xs text-gray-500 mt-1">USDC on Base</p>
+      </div>
+      <div class="bg-white bg-opacity-5 rounded-2xl p-5 border border-white border-opacity-10">
+        <p class="text-xs text-gray-400 mb-1">Total Payments</p>
+        <p class="text-2xl font-bold text-indigo-400 mono" id="stat-payments">0</p>
+        <p class="text-xs text-gray-500 mt-1">verified tx</p>
+      </div>
+      <div class="bg-white bg-opacity-5 rounded-2xl p-5 border border-white border-opacity-10">
+        <p class="text-xs text-gray-400 mb-1">Unique Payers</p>
+        <p class="text-2xl font-bold text-purple-400 mono" id="stat-payers">0</p>
+        <p class="text-xs text-gray-500 mt-1">wallets</p>
+      </div>
+      <div class="bg-white bg-opacity-5 rounded-2xl p-5 border border-white border-opacity-10">
+        <p class="text-xs text-gray-400 mb-1">Agent Wallet</p>
+        <p class="text-sm font-bold text-yellow-400 mono truncate" id="stat-wallet">Loading...</p>
+        <p class="text-xs text-gray-500 mt-1 mono" id="stat-usdc">-- USDC</p>
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-6 mb-8">
+
+      <!-- Tools Catalog -->
+      <div class="lg:col-span-1 bg-white bg-opacity-5 rounded-2xl border border-white border-opacity-10 overflow-hidden">
+        <div class="p-5 border-b border-white border-opacity-10">
+          <h2 class="font-semibold text-white flex items-center gap-2">
+            <span>🛠️</span> Available Tools
+            <span class="ml-auto text-xs bg-indigo-600 bg-opacity-30 text-indigo-300 rounded-full px-2 py-0.5" id="tool-count">8</span>
+          </h2>
+          <p class="text-xs text-gray-400 mt-1">Each call requires USDC payment via x402</p>
+        </div>
+        <div class="scroll-area" id="tools-list">
+          <div class="p-4 text-center text-gray-500 text-sm">Loading tools...</div>
+        </div>
+      </div>
+
+      <!-- Try It Live -->
+      <div class="lg:col-span-2 bg-white bg-opacity-5 rounded-2xl border border-white border-opacity-10 overflow-hidden">
+        <div class="p-5 border-b border-white border-opacity-10">
+          <h2 class="font-semibold text-white flex items-center gap-2">
+            <span>⚡</span> Try a Tool (Free Demo)
+          </h2>
+          <p class="text-xs text-gray-400 mt-1">Demo mode — full calls require USDC payment</p>
+        </div>
+        <div class="p-5">
+          <div class="flex gap-3 mb-4">
+            <select id="demo-tool" class="flex-1 bg-gray-900 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+              <option value="ai_chat">🤖 AI Chat ($0.005)</option>
+              <option value="market_data">📈 Market Data ($0.002)</option>
+              <option value="wallet_balance">💰 Wallet Balance ($0.001)</option>
+              <option value="text_analysis">🔍 Text Analysis ($0.003)</option>
+            </select>
+          </div>
+          <textarea
+            id="demo-input"
+            rows="3"
+            placeholder='Enter your query (e.g. "What is the future of AI on blockchain?" or token symbol like "ETH")'
+            class="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 resize-none mb-3"
+          ></textarea>
+          <button
+            id="demo-btn"
+            onclick="runDemo()"
+            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
+          >
+            <span>⚡ Run Demo (No Payment)</span>
+          </button>
+          <div id="demo-result" class="mt-4 hidden">
+            <div class="bg-gray-900 bg-opacity-80 rounded-xl p-4 border border-gray-700">
+              <p class="text-xs text-gray-400 mb-2">Response:</p>
+              <pre id="demo-output" class="text-xs text-green-300 mono whitespace-pre-wrap overflow-auto max-h-48"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-6 mb-8">
+      <!-- Payment Ledger -->
+      <div class="bg-white bg-opacity-5 rounded-2xl border border-white border-opacity-10 overflow-hidden">
+        <div class="p-5 border-b border-white border-opacity-10">
+          <h2 class="font-semibold text-white flex items-center gap-2">
+            <span>💳</span> Payment Ledger
+            <span class="ml-auto text-xs text-gray-400">Last 20 txs</span>
+          </h2>
+        </div>
+        <div class="scroll-area" id="payment-ledger">
+          <div class="p-4 text-center text-gray-500 text-sm">No payments yet</div>
+        </div>
+      </div>
+
+      <!-- A2A Agents -->
+      <div class="bg-white bg-opacity-5 rounded-2xl border border-white border-opacity-10 overflow-hidden">
+        <div class="p-5 border-b border-white border-opacity-10">
+          <h2 class="font-semibold text-white flex items-center gap-2">
+            <span>🤝</span> A2A Agent Registry
+            <span class="ml-auto text-xs text-gray-400">Connected agents</span>
+          </h2>
+        </div>
+        <div class="scroll-area" id="a2a-agents">
+          <div class="p-4 text-center text-gray-500 text-sm">No agents registered yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Integration Guide -->
+    <div class="bg-white bg-opacity-5 rounded-2xl border border-white border-opacity-10 p-6 mb-6">
+      <h2 class="font-semibold text-white mb-4 flex items-center gap-2"><span>📡</span> Integration Guide</h2>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="bg-gray-900 bg-opacity-60 rounded-xl p-4 border border-gray-700">
+          <h3 class="text-sm font-semibold text-indigo-300 mb-2">1. Direct HTTP (x402)</h3>
+          <pre class="text-xs text-gray-300 mono whitespace-pre-wrap">GET /api/tools/ai-chat
+# Server returns 402 + payment info
+
+# Client pays with USDC on Base
+GET /api/tools/ai-chat
+X-PAYMENT: &lt;base64-payload&gt;
+Content-Type: application/json
+
+{"query": "Hello Kai!"}</pre>
+        </div>
+        <div class="bg-gray-900 bg-opacity-60 rounded-xl p-4 border border-gray-700">
+          <h3 class="text-sm font-semibold text-purple-300 mb-2">2. MCP Protocol</h3>
+          <pre class="text-xs text-gray-300 mono whitespace-pre-wrap">POST /mcp
+Content-Type: application/json
+X-PAYMENT: &lt;base64-payload&gt;
+
+{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "ai_chat",
+    "arguments": {
+      "query": "Hello from Claude!"
+    }
+  }
+}</pre>
+        </div>
+        <div class="bg-gray-900 bg-opacity-60 rounded-xl p-4 border border-gray-700">
+          <h3 class="text-sm font-semibold text-green-300 mb-2">3. A2A Protocol</h3>
+          <pre class="text-xs text-gray-300 mono whitespace-pre-wrap">POST /a2a
+Content-Type: application/json
+X-PAYMENT: &lt;base64-payload&gt;
+X-Agent-Address: 0xYourAgent
+X-Agent-Name: YourBot
+
+{
+  "task": "market_data",
+  "params": {"token": "ETH"},
+  "callback_url": "https://..."
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Wallet Info Section -->
+    <div class="bg-white bg-opacity-5 rounded-2xl border border-white border-opacity-10 p-6">
+      <h2 class="font-semibold text-white mb-4 flex items-center gap-2"><span>🏦</span> Agent Wallet — Base Mainnet</h2>
+      <div class="grid md:grid-cols-2 gap-4" id="wallet-details">
+        <div>
+          <p class="text-xs text-gray-400 mb-1">Wallet Address</p>
+          <p class="mono text-sm text-white" id="wallet-address">Loading...</p>
+          <a id="wallet-explorer" href="#" target="_blank" class="text-xs text-indigo-400 hover:text-indigo-200 mt-1 inline-block">View on BaseScan ↗</a>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <p class="text-xs text-gray-400 mb-1">ETH Balance</p>
+            <p class="mono text-lg font-bold text-white" id="wallet-eth">--</p>
+          </div>
+          <div>
+            <p class="text-xs text-gray-400 mb-1">USDC Balance</p>
+            <p class="mono text-lg font-bold text-green-400" id="wallet-usdc-full">--</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const BASE = '';
+
+    async function loadDashboard() {
+      try {
+        const [statsRes, toolsRes, ledgerRes, walletRes, a2aRes] = await Promise.all([
+          fetch(`${BASE}/api/stats`).then(r => r.json()),
+          fetch(`${BASE}/api/tools`).then(r => r.json()),
+          fetch(`${BASE}/api/payments?limit=20`).then(r => r.json()),
+          fetch(`${BASE}/api/wallet`).then(r => r.json()),
+          fetch(`${BASE}/api/agents`).then(r => r.json()),
+        ]);
+
+        // Stats
+        const s = statsRes.totals || {};
+        document.getElementById('stat-revenue').textContent = '$' + (s.total_revenue || 0).toFixed(4);
+        document.getElementById('stat-payments').textContent = s.total_payments || 0;
+        document.getElementById('stat-payers').textContent = s.unique_payers || 0;
+
+        // Wallet
+        if (walletRes.address) {
+          const addr = walletRes.address;
+          const short = addr.slice(0, 6) + '...' + addr.slice(-4);
+          document.getElementById('stat-wallet').textContent = short;
+          document.getElementById('stat-usdc').textContent = walletRes.balanceUSDC + ' USDC';
+          document.getElementById('wallet-address').textContent = addr;
+          document.getElementById('wallet-eth').textContent = walletRes.balanceETH + ' ETH';
+          document.getElementById('wallet-usdc-full').textContent = walletRes.balanceUSDC + ' USDC';
+          const explorerLink = document.getElementById('wallet-explorer');
+          explorerLink.href = walletRes.explorerUrl;
+        }
+
+        // Tools list
+        const toolsEl = document.getElementById('tools-list');
+        document.getElementById('tool-count').textContent = (toolsRes.tools || []).length;
+        toolsEl.innerHTML = (toolsRes.tools || []).map(t => `
+          <div class="p-4 border-b border-white border-opacity-5 hover:bg-white hover:bg-opacity-5 transition-colors">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <p class="text-sm font-medium text-white">${getCategoryEmoji(t.category)} ${t.name}</p>
+                <p class="text-xs text-gray-400 mt-0.5 leading-relaxed">${t.description.slice(0, 60)}...</p>
+              </div>
+              <div class="text-right shrink-0">
+                <span class="text-xs font-bold text-green-400 mono">$${t.price_usd}</span>
+                <p class="text-xs text-gray-500 mt-0.5">${t.call_count || 0} calls</p>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+        // Payment ledger
+        const ledgerEl = document.getElementById('payment-ledger');
+        if ((ledgerRes.payments || []).length === 0) {
+          ledgerEl.innerHTML = '<div class="p-6 text-center text-gray-500 text-sm">No payments yet. Be the first!</div>';
+        } else {
+          ledgerEl.innerHTML = (ledgerRes.payments || []).map(p => `
+            <div class="p-3 border-b border-white border-opacity-5 flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-green-900 bg-opacity-40 flex items-center justify-center text-sm">💳</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-medium text-white truncate mono">${p.payer?.slice(0,10)}...${p.payer?.slice(-4)}</p>
+                <p class="text-xs text-gray-400">${p.service} · ${new Date(p.created_at).toLocaleString()}</p>
+              </div>
+              <span class="text-xs font-bold text-green-400 mono shrink-0">+$${Number(p.amount_usd).toFixed(4)}</span>
+            </div>
+          `).join('');
+        }
+
+        // A2A agents
+        const a2aEl = document.getElementById('a2a-agents');
+        if ((a2aRes.agents || []).length === 0) {
+          a2aEl.innerHTML = '<div class="p-6 text-center text-gray-500 text-sm">No A2A agents registered yet.</div>';
+        } else {
+          a2aEl.innerHTML = (a2aRes.agents || []).map(a => `
+            <div class="p-3 border-b border-white border-opacity-5 flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-purple-900 bg-opacity-40 flex items-center justify-center text-sm">🤖</div>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-medium text-white">${a.agent_name || 'Unknown Agent'}</p>
+                <p class="text-xs text-gray-400 mono truncate">${a.agent_address?.slice(0,14)}...</p>
+              </div>
+              <div class="text-right shrink-0">
+                <p class="text-xs text-white mono">${a.total_calls} calls</p>
+                <p class="text-xs text-green-400 mono">$${Number(a.total_paid).toFixed(4)}</p>
+              </div>
+            </div>
+          `).join('');
+        }
+      } catch (e) {
+        console.error('Dashboard load error:', e);
+      }
+    }
+
+    async function runDemo() {
+      const tool = document.getElementById('demo-tool').value;
+      const input = document.getElementById('demo-input').value.trim();
+      const btn = document.getElementById('demo-btn');
+      const resultEl = document.getElementById('demo-result');
+      const outputEl = document.getElementById('demo-output');
+
+      if (!input) {
+        alert('Please enter a query first!');
+        return;
+      }
+
+      btn.textContent = '⏳ Running...';
+      btn.disabled = true;
+      resultEl.classList.remove('hidden');
+      outputEl.textContent = 'Processing...';
+
+      try {
+        const resp = await fetch(`${BASE}/api/demo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tool, input }),
+        });
+        const data = await resp.json();
+        outputEl.textContent = JSON.stringify(data, null, 2);
+      } catch (e) {
+        outputEl.textContent = 'Error: ' + e.message;
+      } finally {
+        btn.innerHTML = '<span>⚡ Run Demo (No Payment)</span>';
+        btn.disabled = false;
+      }
+    }
+
+    function getCategoryEmoji(cat) {
+      const map = { ai: '🤖', blockchain: '⛓️', research: '🔍', general: '⚙️' };
+      return map[cat] || '⚙️';
+    }
+
+    loadDashboard();
+    setInterval(loadDashboard, 30000); // Refresh every 30s
+  </script>
+</body>
+</html>
